@@ -1,5 +1,6 @@
 import { Deepgram } from "@deepgram/sdk";
 import React, { ChangeEvent, ChangeEventHandler, Component } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
 interface AppProps {}
@@ -62,28 +63,28 @@ class App extends Component<AppProps, AppState> {
 
   render() {
     return (
-      <div className="container-fluid">
-        <header className="bg-white shadow">
-          <h1>Subtitler</h1>
-        </header>
-        <main>
-          <span className="text-gray-700">API Key</span>
-          <input
-            type="password"
-            maxLength={40}
-            className="
-                    mt-1
-                    block
-                    w-full
-                    rounded-md
-                    border-gray-300
-                    shadow-sm
-                    focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
-                  "
-            value={this.state.apiKey}
-            onChange={this.handleApiKeyChange}
-            placeholder="Enter deepgram API key"
-          />
+      <div className="container-fluid mx-0 px-0">
+        <div className="container-fluid bg-white shadow py-3">
+          <header className="container">
+            <h1>Subtitler</h1>
+          </header>
+        </div>
+
+        <main className="container mt-2">
+          <div className="mb-3">
+            <label htmlFor="apiKey" className="form-label">
+              API Key
+            </label>
+            <input
+              type="password"
+              maxLength={40}
+              className="form-control"
+              id="apiKey"
+              value={this.state.apiKey}
+              onChange={this.handleApiKeyChange}
+              placeholder="Enter deepgram API key"
+            />
+          </div>
         </main>
       </div>
     );
