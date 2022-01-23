@@ -2,6 +2,9 @@ import { Deepgram } from "@deepgram/sdk";
 import React, { ChangeEvent, ChangeEventHandler, Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
+import { BrowserLiveTranscription } from "./DeepgramBrowserTranscriber/BrowserLive";
+
+const WebSocket = require("isomorphic-ws");
 
 interface AppProps {}
 
@@ -37,10 +40,19 @@ class App extends Component<AppProps, AppState> {
       });
 
       if (this.deepgram != undefined) {
-        const deepgramSocket = this.deepgram.transcription.live({
-          punctuate: true,
-          version: "latest",
-        });
+        // const deepgramSocket = this.deepgram.transcription.live({
+        //   punctuate: true,
+        //   version: "latest",
+        // });
+
+        const deepgramSocket = new BrowserLiveTranscription(
+          apiKey,
+          "api.deepgram.com",
+          {
+            punctuate: true,
+            version: "latest",
+          }
+        );
 
         deepgramSocket.addListener("open", () => {
           mediaRecorder.addEventListener("dataavailable", async (event) => {
@@ -51,7 +63,7 @@ class App extends Component<AppProps, AppState> {
           mediaRecorder.start(1000);
         });
 
-        deepgramSocket.addListener("transcriptReceived", (received) => {
+        deepgramSocket.addListener("transcriptReceived", (received: any) => {
           const transcript = received.channel.alternatives[0].transcript;
           if (transcript && received.is_final) {
             console.log(transcript);
