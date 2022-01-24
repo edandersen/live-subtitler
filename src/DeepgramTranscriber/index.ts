@@ -1,6 +1,6 @@
 import EventEmitter from "events";
-import querystring from "querystring";
 import WebSocket from "isomorphic-ws";
+import * as QueryString from "query-string";
 
 export class DeepgramTranscriber extends EventEmitter {
   private _socket: WebSocket;
@@ -8,7 +8,7 @@ export class DeepgramTranscriber extends EventEmitter {
   constructor(credentials: string, apiUrl: string, options?: any) {
     super(undefined);
     const endpoint =
-      "wss://" + apiUrl + "/v1/listen?" + querystring.stringify(options);
+      "wss://" + apiUrl + "/v1/listen?" + QueryString.stringify(options);
     this._socket = new WebSocket(endpoint, ["token", credentials]);
     this._bindSocketEvents();
   }
