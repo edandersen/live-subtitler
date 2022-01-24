@@ -2,6 +2,7 @@ import React, { ChangeEvent, Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import { DeepgramTranscriber } from "./DeepgramTranscriber";
+import NewWindow from "react-new-window";
 
 interface AppProps {}
 
@@ -61,6 +62,9 @@ class App extends Component<AppProps, AppState> {
   render() {
     return (
       <div className="container-fluid mx-0 px-0">
+        {/* <NewWindow>
+          <h1>Hi 👋</h1>
+        </NewWindow> */}
         <div className="container-fluid bg-white shadow py-3">
           <header className="container">
             <h1>Subtitler</h1>
