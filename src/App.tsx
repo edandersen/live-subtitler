@@ -1,10 +1,7 @@
-import { Deepgram } from "@deepgram/sdk";
-import React, { ChangeEvent, ChangeEventHandler, Component } from "react";
+import React, { ChangeEvent, Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import { BrowserLiveTranscription } from "./DeepgramBrowserTranscriber/BrowserLive";
-
-const WebSocket = require("isomorphic-ws");
+import { DeepgramTranscriber } from "./DeepgramTranscriber";
 
 interface AppProps {}
 
@@ -13,8 +10,6 @@ interface AppState {
 }
 
 class App extends Component<AppProps, AppState> {
-  private deepgram: Deepgram | undefined;
-
   constructor(props: AppProps) {
     super(props);
     this.state = {
@@ -27,49 +22,39 @@ class App extends Component<AppProps, AppState> {
   handleApiKeyChange(event: ChangeEvent<HTMLInputElement>) {
     const apiKey = event.target.value;
     this.setState({ apiKey: apiKey });
-    if (apiKey?.length == 40) {
+    if (apiKey?.length === 40) {
       this.setupDeepgram(apiKey);
     }
   }
 
   setupDeepgram(apiKey: string) {
-    this.deepgram = new Deepgram(apiKey);
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: "audio/webm",
       });
 
-      if (this.deepgram != undefined) {
-        // const deepgramSocket = this.deepgram.transcription.live({
-        //   punctuate: true,
-        //   version: "latest",
-        // });
+      const deepgramSocket = new DeepgramTranscriber(
+        apiKey,
+        "api.deepgram.com",
+        {
+          punctuate: true,
+          version: "latest",
+          language: "en-GB",
+        }
+      );
 
-        const deepgramSocket = new BrowserLiveTranscription(
-          apiKey,
-          "api.deepgram.com",
-          {
-            punctuate: true,
-            version: "latest",
-          }
-        );
-
-        deepgramSocket.addListener("open", () => {
-          mediaRecorder.addEventListener("dataavailable", async (event) => {
-            if (event.data.size > 0 && deepgramSocket.getReadyState() == 1) {
-              deepgramSocket.send(event.data);
-            }
-          });
-          mediaRecorder.start(1000);
-        });
-
-        deepgramSocket.addListener("transcriptReceived", (received: any) => {
-          const transcript = received.channel.alternatives[0].transcript;
-          if (transcript && received.is_final) {
-            console.log(transcript);
+      deepgramSocket.addListener("open", () => {
+        mediaRecorder.addEventListener("dataavailable", async (event) => {
+          if (event.data.size > 0 && deepgramSocket.getIsReady()) {
+            deepgramSocket.send(event.data);
           }
         });
-      }
+        mediaRecorder.start(1000);
+      });
+
+      deepgramSocket.addListener("transcriptReceived", (received: string) => {
+        console.log(received);
+      });
     });
   }
 
