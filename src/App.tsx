@@ -10,12 +10,14 @@ interface AppState {
   isRunning: boolean;
   lastSubtitle: string;
   subtitleTimeout: number;
+  isPopOutShown: boolean;
 }
 
 class App extends Component<AppProps, AppState> {
   private deepgramSocket: DeepgramTranscriber | null;
   private mediaStream: MediaStream | null;
   private mediaRecorder: MediaRecorder | null;
+  private setIntervalId: any;
   constructor(props: AppProps) {
     super(props);
     this.state = {
@@ -23,6 +25,7 @@ class App extends Component<AppProps, AppState> {
       isRunning: false,
       lastSubtitle: "",
       subtitleTimeout: 4,
+      isPopOutShown: false,
     };
     this.deepgramSocket = null;
     this.mediaStream = null;
@@ -30,6 +33,7 @@ class App extends Component<AppProps, AppState> {
 
     this.handleApiKeyChange = this.handleApiKeyChange.bind(this);
     this.handleStartStopButton = this.handleStartStopButton.bind(this);
+    this.handlePopoutWindowButton = this.handlePopoutWindowButton.bind(this);
   }
 
   handleApiKeyChange(event: ChangeEvent<HTMLInputElement>) {
@@ -38,6 +42,10 @@ class App extends Component<AppProps, AppState> {
 
   handleTimeoutChange(event: ChangeEvent<HTMLInputElement>) {
     this.setState({ subtitleTimeout: parseInt(event.target.value) });
+  }
+
+  handlePopoutWindowButton() {
+    this.setState({ isPopOutShown: !this.state.isPopOutShown });
   }
 
   handleStartStopButton() {
@@ -91,14 +99,32 @@ class App extends Component<AppProps, AppState> {
       (received: string) => {
         this.setState({ lastSubtitle: received });
 
-        window.setTimeout(() => {
-          this.setState({ lastSubtitle: "" });
-        }, this.state.subtitleTimeout * 1000);
+        // if (this.setIntervalId) {
+        //   clearInterval(this.setIntervalId);
+        // }
+
+        // this.setIntervalId = setInterval(() => {
+        //   this.setState({ lastSubtitle: "" });
+        // }, this.state.subtitleTimeout * 1000);
       }
     );
   }
 
   render() {
+    const subtitleArea = (
+      <div
+        className="bg-black px-4 py-8 h-48"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <span className="text-white text-4xl my-auto mx-auto">
+          {this.state.lastSubtitle}
+        </span>
+      </div>
+    );
+
     return (
       <div>
         <header className="bg-zinc-900 shadow">
@@ -108,26 +134,38 @@ class App extends Component<AppProps, AppState> {
             </h1>
           </div>
         </header>
-        <div
-          className="bg-black px-4 py-8 h-48"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <span className="text-white text-4xl my-auto mx-auto">
-            {this.state.lastSubtitle}
-          </span>
-        </div>
+
+        {this.state.isPopOutShown ? (
+          <NewWindow
+            title="Livestream Subtitles"
+            copyStyles={true}
+            features={{
+              height: 128 + 32 + 32 + 2,
+              width: 800,
+              location: false,
+            }}
+          >
+            {subtitleArea}
+          </NewWindow>
+        ) : (
+          subtitleArea
+        )}
+
         <main>
-          <div className="max-w-7xl text-zinc-100 mx-auto sm:px-6 lg:px-8">
+          <div className="max-w-7xl text-zinc-100 mx-auto sm:px-6 lg:px-8 bg-zinc-800">
             <div className="px-4 py-6 sm:px-0">
               <div className="">
                 <button
                   onClick={this.handleStartStopButton}
-                  className="rounded-full mt-3 px-4 py-2 font-semibold text-sm bg-cyan-500 text-white rounded-full shadow-sm"
+                  className="rounded-full px-4 py-2 font-semibold text-sm bg-cyan-500 text-white rounded-full shadow-sm"
                 >
                   {this.state.isRunning ? "Stop" : "Start"}
+                </button>
+                <button
+                  onClick={this.handlePopoutWindowButton}
+                  className="rounded-full ml-3 px-4 py-2 font-semibold text-sm bg-zinc-500 text-white rounded-full shadow-sm"
+                >
+                  {this.state.isPopOutShown ? "Close popout" : "Popout window"}
                 </button>
                 <label className="block mt-2">
                   <h4 className="text-zinc-400 text-2xl">Settings</h4>
