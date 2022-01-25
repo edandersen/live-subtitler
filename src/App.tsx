@@ -8,6 +8,8 @@ interface AppProps {}
 interface AppState {
   apiKey: string;
   isRunning: boolean;
+  lastSubtitle: string;
+  subtitleTimeout: number;
 }
 
 class App extends Component<AppProps, AppState> {
@@ -19,6 +21,8 @@ class App extends Component<AppProps, AppState> {
     this.state = {
       apiKey: "",
       isRunning: false,
+      lastSubtitle: "",
+      subtitleTimeout: 4,
     };
     this.deepgramSocket = null;
     this.mediaStream = null;
@@ -29,11 +33,11 @@ class App extends Component<AppProps, AppState> {
   }
 
   handleApiKeyChange(event: ChangeEvent<HTMLInputElement>) {
-    const apiKey = event.target.value;
-    this.setState({ apiKey: apiKey });
-    // if (apiKey?.length === 40) {
-    //   this.setupDeepgram(apiKey);
-    // }
+    this.setState({ apiKey: event.target.value });
+  }
+
+  handleTimeoutChange(event: ChangeEvent<HTMLInputElement>) {
+    this.setState({ subtitleTimeout: parseInt(event.target.value) });
   }
 
   handleStartStopButton() {
@@ -43,6 +47,7 @@ class App extends Component<AppProps, AppState> {
       this.deepgramSocket?.finish();
       this.mediaRecorder?.stop();
       this.deepgramSocket = null;
+      // TODD: Fix stop - throws errors in Console
     }
 
     if (!this.state.isRunning) {
@@ -84,7 +89,11 @@ class App extends Component<AppProps, AppState> {
     this.deepgramSocket.addListener(
       "transcriptReceived",
       (received: string) => {
-        console.log(received);
+        this.setState({ lastSubtitle: received });
+
+        window.setTimeout(() => {
+          this.setState({ lastSubtitle: "" });
+        }, this.state.subtitleTimeout * 1000);
       }
     );
   }
@@ -99,11 +108,29 @@ class App extends Component<AppProps, AppState> {
             </h1>
           </div>
         </header>
+        <div
+          className="bg-black px-4 py-8 h-48"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <span className="text-white text-4xl my-auto mx-auto">
+            {this.state.lastSubtitle}
+          </span>
+        </div>
         <main>
-          <div className="max-w-7xl text-zinc-100 mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="max-w-7xl text-zinc-100 mx-auto sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
-              <div className="h-96">
-                <label className="block">
+              <div className="">
+                <button
+                  onClick={this.handleStartStopButton}
+                  className="rounded-full mt-3 px-4 py-2 font-semibold text-sm bg-cyan-500 text-white rounded-full shadow-sm"
+                >
+                  {this.state.isRunning ? "Stop" : "Start"}
+                </button>
+                <label className="block mt-2">
+                  <h4 className="text-zinc-400 text-2xl">Settings</h4>
                   <span>API Key</span>
                   <input
                     type="password"
@@ -123,12 +150,25 @@ class App extends Component<AppProps, AppState> {
                   "
                     placeholder="Enter deepgram API key"
                   />
-                  <button
-                    onClick={this.handleStartStopButton}
-                    className="rounded-full mt-3 px-4 py-2 font-semibold text-sm bg-cyan-500 text-white rounded-full shadow-sm"
-                  >
-                    {this.state.isRunning ? "Stop" : "Start"}
-                  </button>
+                  <span>Subtitles disappear after x seconds:</span>
+                  <input
+                    type="text"
+                    maxLength={40}
+                    id="subtitleTimeout"
+                    value={this.state.subtitleTimeout}
+                    onChange={this.handleTimeoutChange}
+                    className="
+                    bg-zinc-600
+                    mt-1
+                    block
+                    w-full
+                    rounded-md
+                    border-gray-300
+                    shadow-sm
+                    focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+                  "
+                    placeholder="Enter deepgram API key"
+                  />
                 </label>
               </div>
             </div>
