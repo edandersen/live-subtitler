@@ -91,7 +91,7 @@ class App extends Component<AppProps, AppState> {
   private postTranscriptToYoutube = async (transcript: string) => {
     var timestamp = new Date().toISOString();
     var payload =
-      timestamp.replace("Z", "") + "  region:reg1#cue1\n" + transcript + "\n";
+      timestamp.replace("Z", "") + "  region:reg1#cue1\n " + transcript + "\n";
 
     var response = await tauriFetch(
       this.state.youTubeIngestionUrl + "&seq=" + this.youTubeSequenceId,
