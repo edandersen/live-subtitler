@@ -11,6 +11,7 @@ interface AppState {
   lastSubtitle: string;
   subtitleTimeout: number;
   isPopOutShown: boolean;
+  youTubeIngestionUrl: string;
 }
 
 class App extends Component<AppProps, AppState> {
@@ -26,29 +27,30 @@ class App extends Component<AppProps, AppState> {
       lastSubtitle: "",
       subtitleTimeout: 4,
       isPopOutShown: false,
+      youTubeIngestionUrl: "",
     };
     this.deepgramSocket = null;
     this.mediaStream = null;
     this.mediaRecorder = null;
-
-    this.handleApiKeyChange = this.handleApiKeyChange.bind(this);
-    this.handleStartStopButton = this.handleStartStopButton.bind(this);
-    this.handlePopoutWindowButton = this.handlePopoutWindowButton.bind(this);
   }
 
-  handleApiKeyChange(event: ChangeEvent<HTMLInputElement>) {
+  private handleApiKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({ apiKey: event.target.value });
-  }
+  };
 
-  handleTimeoutChange(event: ChangeEvent<HTMLInputElement>) {
+  private handleYouTubeUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
+    this.setState({ youTubeIngestionUrl: event.target.value });
+  };
+
+  private handleTimeoutChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({ subtitleTimeout: parseInt(event.target.value) });
-  }
+  };
 
-  handlePopoutWindowButton() {
+  private handlePopoutWindowButton = () => {
     this.setState({ isPopOutShown: !this.state.isPopOutShown });
-  }
+  };
 
-  handleStartStopButton() {
+  private handleStartStopButton = () => {
     this.setState({ isRunning: !this.state.isRunning });
 
     if (this.state.isRunning) {
@@ -63,7 +65,7 @@ class App extends Component<AppProps, AppState> {
         this.setupDeepgram(this.state.apiKey);
       }
     }
-  }
+  };
 
   async setupDeepgram(apiKey: string) {
     if (this.mediaStream == null) {
@@ -167,16 +169,18 @@ class App extends Component<AppProps, AppState> {
                 >
                   {this.state.isPopOutShown ? "Close popout" : "Popout window"}
                 </button>
-                <label className="block mt-2">
-                  <h4 className="text-zinc-400 text-2xl">Settings</h4>
-                  <span>API Key</span>
-                  <input
-                    type="password"
-                    maxLength={40}
-                    id="apiKey"
-                    value={this.state.apiKey}
-                    onChange={this.handleApiKeyChange}
-                    className="
+                <div className="flex">
+                  <div className="w-full pr-4">
+                    <h4 className="text-zinc-400 text-2xl">Input</h4>
+
+                    <span>API Key</span>
+                    <input
+                      type="password"
+                      maxLength={40}
+                      id="apiKey"
+                      value={this.state.apiKey}
+                      onChange={this.handleApiKeyChange}
+                      className="
                     bg-zinc-600
                     mt-1
                     block
@@ -186,16 +190,16 @@ class App extends Component<AppProps, AppState> {
                     shadow-sm
                     focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
                   "
-                    placeholder="Enter deepgram API key"
-                  />
-                  <span>Subtitles disappear after x seconds:</span>
-                  <input
-                    type="text"
-                    maxLength={40}
-                    id="subtitleTimeout"
-                    value={this.state.subtitleTimeout}
-                    onChange={this.handleTimeoutChange}
-                    className="
+                      placeholder="Enter deepgram API key"
+                    />
+                    <span>Subtitles disappear after x seconds:</span>
+                    <input
+                      type="text"
+                      maxLength={40}
+                      id="subtitleTimeout"
+                      value={this.state.subtitleTimeout}
+                      onChange={this.handleTimeoutChange}
+                      className="
                     bg-zinc-600
                     mt-1
                     block
@@ -205,9 +209,35 @@ class App extends Component<AppProps, AppState> {
                     shadow-sm
                     focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
                   "
-                    placeholder="Enter deepgram API key"
-                  />
-                </label>
+                      placeholder="x"
+                    />
+                  </div>
+                  <div className="w-full pl-4">
+                    <h4 className="text-zinc-400 text-2xl">Output</h4>
+                    <span>YouTube live subtitles ingestion URL</span>
+                    <input
+                      type="password"
+                      maxLength={500}
+                      id="apiKey"
+                      value={this.state.youTubeIngestionUrl}
+                      onChange={this.handleYouTubeUrlChange}
+                      className="
+                    bg-zinc-600
+                    mt-1
+                    block
+                    w-full
+                    rounded-md
+                    border-gray-300
+                    shadow-sm
+                    focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+                  "
+                      placeholder="http://upload.youtube.com/closedcaption?cid=blah-blah-blah"
+                    />
+                  </div>
+                  {/* <h4 className="text-zinc-400 text-2xl">Settings</h4>
+                 
+                   */}
+                </div>
               </div>
             </div>
           </div>
