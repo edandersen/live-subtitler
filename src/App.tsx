@@ -2,6 +2,7 @@ import React, { ChangeEvent, Component } from "react";
 import "./App.css";
 import { DeepgramTranscriber } from "./DeepgramTranscriber";
 import NewWindow from "react-new-window";
+import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
 
 interface AppProps {}
 
@@ -12,6 +13,13 @@ interface AppState {
   subtitleTimeout: number;
   isPopOutShown: boolean;
   youTubeIngestionUrl: string;
+  isDesktop: boolean;
+}
+
+declare global {
+  interface Window {
+    __TAURI__: any | undefined;
+  }
 }
 
 class App extends Component<AppProps, AppState> {
@@ -19,6 +27,9 @@ class App extends Component<AppProps, AppState> {
   private mediaStream: MediaStream | null;
   private mediaRecorder: MediaRecorder | null;
   private setIntervalId: any;
+
+  private youTubeSequenceId: number;
+
   constructor(props: AppProps) {
     super(props);
     this.state = {
@@ -28,10 +39,19 @@ class App extends Component<AppProps, AppState> {
       subtitleTimeout: 4,
       isPopOutShown: false,
       youTubeIngestionUrl: "",
+      isDesktop: window.__TAURI__ !== undefined,
     };
     this.deepgramSocket = null;
     this.mediaStream = null;
     this.mediaRecorder = null;
+
+    this.youTubeSequenceId = 10000;
+
+    if (window.__TAURI__ !== undefined) {
+      console.log("In is Tauri");
+    } else {
+      console.log("Not in tauri");
+    }
   }
 
   private handleApiKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +87,28 @@ class App extends Component<AppProps, AppState> {
     }
   };
 
+  //https://stackoverflow.com/questions/61210976/how-to-caption-youtube-livestreams
+  private postTranscriptToYoutube = async (transcript: string) => {
+    var timestamp = new Date().toISOString();
+    var payload =
+      timestamp.replace("Z", "") + "  region:reg1#cue1\n" + transcript + "\n";
+
+    var response = await tauriFetch(
+      this.state.youTubeIngestionUrl + "&seq=" + this.youTubeSequenceId,
+      {
+        method: "POST",
+        body: { payload: payload, type: "Text" },
+        headers: { "Content-type": "text/plain" },
+        responseType: ResponseType.Text,
+      }
+    );
+    console.log(payload);
+    console.log(response.ok);
+    console.log(response.status);
+    console.log(response.data);
+    this.youTubeSequenceId = this.youTubeSequenceId + 1;
+  };
+
   async setupDeepgram(apiKey: string) {
     if (this.mediaStream == null) {
       this.mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -100,6 +142,8 @@ class App extends Component<AppProps, AppState> {
       "transcriptReceived",
       (received: string) => {
         this.setState({ lastSubtitle: received });
+
+        this.postTranscriptToYoutube(received);
 
         // if (this.setIntervalId) {
         //   clearInterval(this.setIntervalId);
@@ -218,7 +262,7 @@ class App extends Component<AppProps, AppState> {
                     <input
                       type="password"
                       maxLength={500}
-                      id="apiKey"
+                      id="youTubeIngestionUrl"
                       value={this.state.youTubeIngestionUrl}
                       onChange={this.handleYouTubeUrlChange}
                       className="
